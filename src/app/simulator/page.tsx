@@ -33,12 +33,12 @@ import Link from 'next/link';
 
 const MotionBox = motion(Box);
 
-// Demo student data
+// Demo student data with academic details
 const students = [
-  { id: 1, name: 'Yasharth Singh', rfid_uid: 'RFID_001', balance: 500 },
-  { id: 2, name: 'Mohammad Ali', rfid_uid: 'RFID_002', balance: 300 },
-  { id: 3, name: 'Vaibhav Katariya', rfid_uid: 'RFID_003', balance: 200 },
-  { id: 4, name: 'Saniya Khan', rfid_uid: 'RFID_004', balance: 400 },
+  { id: 1, name: 'Yasharth Singh', rfid_uid: 'RFID_001', balance: 500, branch: 'CSE', section: 'F3', program: 'B.Tech', year: 3 },
+  { id: 2, name: 'Mohammad Ali', rfid_uid: 'RFID_002', balance: 300, branch: 'CSE', section: 'F5', program: 'B.Tech', year: 2 },
+  { id: 3, name: 'Vaibhav Katariya', rfid_uid: 'RFID_003', balance: 200, branch: 'ECS', section: 'E15', program: 'B.Tech', year: 3 },
+  { id: 4, name: 'Saniya Khan', rfid_uid: 'RFID_004', balance: 400, branch: 'CSE', section: 'F1', program: 'B.Sc', year: 1 },
 ];
 
 // Service types
@@ -56,6 +56,11 @@ interface TapResponse {
   action: string;
   balance_remaining: number;
   amount_deducted?: number;
+  branch?: string;
+  section?: string;
+  year?: number;
+  program?: string;
+  attendance_timestamp?: string;
 }
 
 export default function SimulatorPage() {
@@ -145,13 +150,20 @@ export default function SimulatorPage() {
         success: canAfford || cost === 0,
         student: student.name,
         service: service?.name || selectedService,
-        action: canAfford || cost === 0
+        action: selectedService === 'attendance' 
+          ? 'Attendance Marked'
+          : canAfford || cost === 0
           ? cost > 0
             ? 'Payment Approved'
             : 'Access Granted'
           : 'Insufficient Balance',
         balance_remaining: canAfford ? currentBalance - cost : currentBalance,
         amount_deducted: canAfford && cost > 0 ? cost : undefined,
+        branch: student.branch,
+        section: student.section,
+        year: student.year,
+        program: student.program,
+        attendance_timestamp: selectedService === 'attendance' ? new Date().toISOString() : undefined,
       };
 
       setTapResult(mockResponse);
@@ -243,7 +255,7 @@ export default function SimulatorPage() {
                       value={student.rfid_uid}
                       style={{ background: '#1a1a1a' }}
                     >
-                      {student.name} — {student.rfid_uid} — ₹{student.balance}
+                      {student.name} — {student.rfid_uid} — {student.branch} {student.section}
                     </option>
                   ))}
                 </Select>
@@ -433,18 +445,39 @@ export default function SimulatorPage() {
                     <Divider borderColor="gray.700" />
 
                     <SimpleResultRow label="Student" value={tapResult.student} />
+                    {tapResult.program && (
+                      <SimpleResultRow label="Program" value={tapResult.program} />
+                    )}
+                    {tapResult.branch && (
+                      <SimpleResultRow label="Branch" value={tapResult.branch} />
+                    )}
+                    {tapResult.section && (
+                      <SimpleResultRow label="Section" value={tapResult.section} />
+                    )}
+                    {tapResult.year && (
+                      <SimpleResultRow label="Year" value={`Year ${tapResult.year}`} />
+                    )}
                     <SimpleResultRow label="Service" value={tapResult.service} />
+                    {tapResult.attendance_timestamp && (
+                      <SimpleResultRow 
+                        label="Attendance Time" 
+                        value={new Date(tapResult.attendance_timestamp).toLocaleString()} 
+                        highlight
+                      />
+                    )}
                     {tapResult.amount_deducted && (
                       <SimpleResultRow
                         label="Amount Deducted"
                         value={`₹${tapResult.amount_deducted}`}
                       />
                     )}
-                    <SimpleResultRow
-                      label="Balance Remaining"
-                      value={`₹${tapResult.balance_remaining}`}
-                      highlight
-                    />
+                    {!tapResult.attendance_timestamp && (
+                      <SimpleResultRow
+                        label="Balance Remaining"
+                        value={`₹${tapResult.balance_remaining}`}
+                        highlight
+                      />
+                    )}
                   </VStack>
                 </Box>
               </MotionBox>

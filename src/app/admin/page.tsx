@@ -32,6 +32,7 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  Select,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import {
@@ -43,6 +44,8 @@ import {
   CreditCard,
   TrendingUp,
   Clock,
+  Calendar,
+  Filter,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,6 +58,11 @@ interface Student {
   rfid_uid: string;
   wallet_balance: number;
   status: string;
+  branch?: string;
+  section?: string;
+  program?: string;
+  year?: number;
+  last_attendance?: string;
 }
 
 interface Transaction {
@@ -72,15 +80,37 @@ interface Policy {
   requires_payment: boolean;
 }
 
+interface Attendance {
+  id: number;
+  student_id: number;
+  student_name: string;
+  rfid_uid: string;
+  branch: string;
+  section: string;
+  program: string;
+  year: number;
+  date: string;
+  timestamp: string;
+  service_context: string;
+}
+
 const API_BASE = '/api';
 
 export default function AdminPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Attendance filters
+  const [filterBranch, setFilterBranch] = useState('');
+  const [filterSection, setFilterSection] = useState('');
+  const [filterProgram, setFilterProgram] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  
   const toast = useToast();
 
   const fetchData = useCallback(async () => {
@@ -88,10 +118,20 @@ export default function AdminPage() {
     setError(null);
 
     try {
-      const [studentsRes, transactionsRes, policiesRes] = await Promise.all([
+      // Build attendance URL with filters
+      let attendanceUrl = `${API_BASE}/attendance`;
+      const params = new URLSearchParams();
+      if (filterBranch) params.append('branch', filterBranch);
+      if (filterSection) params.append('section', filterSection);
+      if (filterProgram) params.append('program', filterProgram);
+      if (filterYear) params.append('year', filterYear);
+      if (params.toString()) attendanceUrl += `?${params.toString()}`;
+
+      const [studentsRes, transactionsRes, policiesRes, attendanceRes] = await Promise.all([
         fetch(`${API_BASE}/students`),
         fetch(`${API_BASE}/transactions`),
         fetch(`${API_BASE}/policies`),
+        fetch(attendanceUrl),
       ]);
 
       if (studentsRes.ok) {
@@ -108,16 +148,21 @@ export default function AdminPage() {
         const policiesData = await policiesRes.json();
         setPolicies(policiesData);
       }
+
+      if (attendanceRes.ok) {
+        const attendanceData = await attendanceRes.json();
+        setAttendance(attendanceData);
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to connect to backend. Using demo data.');
       
       // Fallback demo data
       setStudents([
-        { id: 1, name: 'Yasharth Singh', roll_no: 'ROLL001', rfid_uid: 'RFID_001', wallet_balance: 500, status: 'active' },
-        { id: 2, name: 'Mohammad Ali', roll_no: 'ROLL002', rfid_uid: 'RFID_002', wallet_balance: 300, status: 'active' },
-        { id: 3, name: 'Vaibhav Katariya', roll_no: 'ROLL003', rfid_uid: 'RFID_003', wallet_balance: 200, status: 'active' },
-        { id: 4, name: 'Saniya Khan', roll_no: 'ROLL004', rfid_uid: 'RFID_004', wallet_balance: 400, status: 'active' },
+        { id: 1, name: 'Yasharth Singh', roll_no: 'ROLL001', rfid_uid: 'RFID_001', wallet_balance: 500, status: 'active', branch: 'CSE', section: 'F3', program: 'B.Tech', year: 3 },
+        { id: 2, name: 'Mohammad Ali', roll_no: 'ROLL002', rfid_uid: 'RFID_002', wallet_balance: 300, status: 'active', branch: 'CSE', section: 'F5', program: 'B.Tech', year: 2 },
+        { id: 3, name: 'Vaibhav Katariya', roll_no: 'ROLL003', rfid_uid: 'RFID_003', wallet_balance: 200, status: 'active', branch: 'ECS', section: 'E15', program: 'B.Tech', year: 3 },
+        { id: 4, name: 'Saniya Khan', roll_no: 'ROLL004', rfid_uid: 'RFID_004', wallet_balance: 400, status: 'active', branch: 'CSE', section: 'F1', program: 'B.Sc', year: 1 },
       ]);
       
       setPolicies([
@@ -129,7 +174,7 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [filterBranch, filterSection, filterProgram, filterYear]);
 
   useEffect(() => {
     fetchData();
@@ -182,6 +227,15 @@ export default function AdminPage() {
   const totalBalance = students.reduce((sum, s) => sum + Number(s.wallet_balance), 0);
   const totalTransactions = transactions.length;
   const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalAttendance = attendance.length;
+
+  // Reset filters
+  const resetFilters = () => {
+    setFilterBranch('');
+    setFilterSection('');
+    setFilterProgram('');
+    setFilterYear('');
+  };
 
   return (
     <Box minH="100vh" bg="#0a0a0a">
@@ -238,7 +292,7 @@ export default function AdminPage() {
           )}
 
           {/* Stats Cards */}
-          <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6}>
+          <SimpleGrid columns={{ base: 1, md: 5 }} spacing={6}>
             <MotionBox
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -269,6 +323,33 @@ export default function AdminPage() {
             <MotionBox
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Box
+                p={6}
+                bg="rgba(255,255,255,0.03)"
+                borderRadius="xl"
+                border="1px solid"
+                borderColor="gray.800"
+              >
+                <Stat>
+                  <StatLabel color="gray.400">
+                    <HStack>
+                      <Icon as={Calendar} boxSize={4} />
+                      <Text>Attendance</Text>
+                    </HStack>
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" color="green.400">
+                    {totalAttendance}
+                  </StatNumber>
+                  <StatHelpText color="gray.500">Records today</StatHelpText>
+                </Stat>
+              </Box>
+            </MotionBox>
+
+            <MotionBox
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
               <Box
@@ -285,7 +366,7 @@ export default function AdminPage() {
                       <Text>Total Balance</Text>
                     </HStack>
                   </StatLabel>
-                  <StatNumber fontSize="3xl" color="green.400">
+                  <StatNumber fontSize="3xl" color="cyan.400">
                     ₹{totalBalance.toFixed(0)}
                   </StatNumber>
                   <StatHelpText color="gray.500">Across all wallets</StatHelpText>
@@ -362,6 +443,12 @@ export default function AdminPage() {
                     <Text>Students</Text>
                   </HStack>
                 </Tab>
+                <Tab _selected={{ bg: 'green.900', color: 'white' }}>
+                  <HStack>
+                    <Icon as={Calendar} boxSize={4} />
+                    <Text>Attendance</Text>
+                  </HStack>
+                </Tab>
                 <Tab _selected={{ bg: 'blue.900', color: 'white' }}>
                   <HStack>
                     <Icon as={Receipt} boxSize={4} />
@@ -391,7 +478,10 @@ export default function AdminPage() {
                         <Tr>
                           <Th color="gray.400" borderColor="gray.700">ID</Th>
                           <Th color="gray.400" borderColor="gray.700">Name</Th>
-                          <Th color="gray.400" borderColor="gray.700">Roll No</Th>
+                          <Th color="gray.400" borderColor="gray.700">Program</Th>
+                          <Th color="gray.400" borderColor="gray.700">Branch</Th>
+                          <Th color="gray.400" borderColor="gray.700">Section</Th>
+                          <Th color="gray.400" borderColor="gray.700">Year</Th>
                           <Th color="gray.400" borderColor="gray.700">RFID UID</Th>
                           <Th color="gray.400" borderColor="gray.700" isNumeric>Balance</Th>
                           <Th color="gray.400" borderColor="gray.700">Status</Th>
@@ -403,6 +493,18 @@ export default function AdminPage() {
                             <Td borderColor="gray.800">{student.id}</Td>
                             <Td borderColor="gray.800" fontWeight="medium">
                               {student.name}
+                            </Td>
+                            <Td borderColor="gray.800">
+                              <Badge colorScheme="purple">{student.program || '-'}</Badge>
+                            </Td>
+                            <Td borderColor="gray.800">
+                              <Badge colorScheme="blue">{student.branch || '-'}</Badge>
+                            </Td>
+                            <Td borderColor="gray.800" color="gray.400">
+                              {student.section || '-'}
+                            </Td>
+                            <Td borderColor="gray.800" color="gray.400">
+                              {student.year ? `Year ${student.year}` : '-'}
                             </Td>
                             <Td borderColor="gray.800" color="gray.400">
                               {student.roll_no}
@@ -432,6 +534,163 @@ export default function AdminPage() {
                       </Tbody>
                     </Table>
                   </Box>
+                </TabPanel>
+
+                {/* Attendance Tab */}
+                <TabPanel px={0}>
+                  <VStack spacing={4} align="stretch">
+                    {/* Filters */}
+                    <Box
+                      bg="rgba(255,255,255,0.02)"
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor="gray.800"
+                      p={4}
+                    >
+                      <HStack mb={4}>
+                        <Icon as={Filter} boxSize={5} color="green.400" />
+                        <Text fontWeight="semibold">Filter Attendance</Text>
+                      </HStack>
+                      <SimpleGrid columns={{ base: 2, md: 5 }} spacing={4}>
+                        <Select
+                          placeholder="Program"
+                          value={filterProgram}
+                          onChange={(e) => setFilterProgram(e.target.value)}
+                          bg="rgba(255,255,255,0.05)"
+                          borderColor="gray.700"
+                        >
+                          <option value="B.Tech" style={{ background: '#1a1a1a' }}>B.Tech</option>
+                          <option value="M.Tech" style={{ background: '#1a1a1a' }}>M.Tech</option>
+                          <option value="B.Sc" style={{ background: '#1a1a1a' }}>B.Sc</option>
+                          <option value="MCA" style={{ background: '#1a1a1a' }}>MCA</option>
+                          <option value="Diploma" style={{ background: '#1a1a1a' }}>Diploma</option>
+                        </Select>
+                        <Select
+                          placeholder="Branch"
+                          value={filterBranch}
+                          onChange={(e) => setFilterBranch(e.target.value)}
+                          bg="rgba(255,255,255,0.05)"
+                          borderColor="gray.700"
+                        >
+                          <option value="CSE" style={{ background: '#1a1a1a' }}>CSE</option>
+                          <option value="ECS" style={{ background: '#1a1a1a' }}>ECS</option>
+                        </Select>
+                        <Select
+                          placeholder="Section"
+                          value={filterSection}
+                          onChange={(e) => setFilterSection(e.target.value)}
+                          bg="rgba(255,255,255,0.05)"
+                          borderColor="gray.700"
+                        >
+                          {['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'E15', 'E16', 'E17'].map((s) => (
+                            <option key={s} value={s} style={{ background: '#1a1a1a' }}>{s}</option>
+                          ))}
+                        </Select>
+                        <Select
+                          placeholder="Year"
+                          value={filterYear}
+                          onChange={(e) => setFilterYear(e.target.value)}
+                          bg="rgba(255,255,255,0.05)"
+                          borderColor="gray.700"
+                        >
+                          <option value="1" style={{ background: '#1a1a1a' }}>1st Year</option>
+                          <option value="2" style={{ background: '#1a1a1a' }}>2nd Year</option>
+                          <option value="3" style={{ background: '#1a1a1a' }}>3rd Year</option>
+                          <option value="4" style={{ background: '#1a1a1a' }}>4th Year</option>
+                        </Select>
+                        <Button 
+                          variant="outline" 
+                          colorScheme="gray" 
+                          onClick={resetFilters}
+                          size="md"
+                        >
+                          Clear Filters
+                        </Button>
+                      </SimpleGrid>
+                    </Box>
+
+                    {/* Attendance Stats */}
+                    <HStack spacing={4}>
+                      <Box
+                        p={4}
+                        bg="rgba(72, 187, 120, 0.1)"
+                        borderRadius="lg"
+                        border="1px solid"
+                        borderColor="green.700"
+                      >
+                        <HStack>
+                          <Icon as={Calendar} boxSize={5} color="green.400" />
+                          <Text fontWeight="semibold" color="green.400">
+                            {attendance.length} Records
+                          </Text>
+                        </HStack>
+                      </Box>
+                    </HStack>
+
+                    {/* Attendance Table */}
+                    <Box
+                      bg="rgba(255,255,255,0.02)"
+                      borderRadius="xl"
+                      border="1px solid"
+                      borderColor="gray.800"
+                      overflow="hidden"
+                    >
+                      {attendance.length === 0 ? (
+                        <Flex justify="center" py={12}>
+                          <VStack spacing={4}>
+                            <Icon as={Calendar} boxSize={12} color="gray.600" />
+                            <Text color="gray.500">No attendance records yet</Text>
+                            <Text color="gray.600" fontSize="sm">
+                              Use the simulator with &quot;Attendance&quot; service to mark attendance
+                            </Text>
+                          </VStack>
+                        </Flex>
+                      ) : (
+                        <Table variant="simple">
+                          <Thead bg="rgba(255,255,255,0.03)">
+                            <Tr>
+                              <Th color="gray.400" borderColor="gray.700">Student Name</Th>
+                              <Th color="gray.400" borderColor="gray.700">RFID UID</Th>
+                              <Th color="gray.400" borderColor="gray.700">Program</Th>
+                              <Th color="gray.400" borderColor="gray.700">Branch</Th>
+                              <Th color="gray.400" borderColor="gray.700">Section</Th>
+                              <Th color="gray.400" borderColor="gray.700">Year</Th>
+                              <Th color="gray.400" borderColor="gray.700">Timestamp</Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {attendance.map((record) => (
+                              <Tr key={record.id} _hover={{ bg: 'rgba(255,255,255,0.03)' }}>
+                                <Td borderColor="gray.800" fontWeight="medium">
+                                  {record.student_name}
+                                </Td>
+                                <Td borderColor="gray.800">
+                                  <Badge colorScheme="blue" fontFamily="mono">
+                                    {record.rfid_uid}
+                                  </Badge>
+                                </Td>
+                                <Td borderColor="gray.800">
+                                  <Badge colorScheme="purple">{record.program}</Badge>
+                                </Td>
+                                <Td borderColor="gray.800">
+                                  <Badge colorScheme="cyan">{record.branch}</Badge>
+                                </Td>
+                                <Td borderColor="gray.800" color="gray.400">
+                                  {record.section}
+                                </Td>
+                                <Td borderColor="gray.800" color="gray.400">
+                                  Year {record.year}
+                                </Td>
+                                <Td borderColor="gray.800" color="gray.400" fontSize="sm">
+                                  {new Date(record.timestamp).toLocaleString()}
+                                </Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      )}
+                    </Box>
+                  </VStack>
                 </TabPanel>
 
                 {/* Transactions Tab */}

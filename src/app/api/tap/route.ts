@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, getPolicy, checkPermission, debitWallet, initDatabase } from '@/lib/db';
+import { query, getPolicy, checkPermission, debitWallet, initDatabase, logAttendance } from '@/lib/db';
 
 // Initialize database on first request
 let initialized = false;
@@ -36,6 +36,49 @@ export async function POST(request: NextRequest) {
     }
 
     const student = studentResult.rows[0];
+
+    // ATTENDANCE SERVICE - Identity-only verification, no wallet logic
+    if (service.toLowerCase() === 'attendance') {
+      // Check if student is active
+      if (student.status !== 'active') {
+        return NextResponse.json({
+          success: false,
+          student: student.name,
+          service: 'Attendance',
+          action: 'Student account is not active',
+          balance_remaining: parseFloat(student.wallet_balance),
+        });
+      }
+
+      // Log attendance (no wallet interaction)
+      const logged = await logAttendance(student.id, 'attendance');
+
+      if (!logged) {
+        return NextResponse.json({
+          success: false,
+          student: student.name,
+          service: 'Attendance',
+          action: 'Failed to log attendance',
+          balance_remaining: parseFloat(student.wallet_balance),
+        });
+      }
+
+      // Return attendance response with academic details
+      return NextResponse.json({
+        success: true,
+        student: student.name,
+        service: 'Attendance',
+        action: 'Attendance Marked',
+        balance_remaining: parseFloat(student.wallet_balance),
+        branch: student.branch,
+        section: student.section,
+        year: student.year,
+        program: student.program,
+        attendance_timestamp: new Date().toISOString(),
+      });
+    }
+
+    // OTHER SERVICES - Standard payment flow
 
     // Step 2: Get Policy
     const policy = await getPolicy(service);
@@ -98,6 +141,10 @@ export async function POST(request: NextRequest) {
       action: message,
       balance_remaining: newBalance,
       amount_deducted: amountDeducted,
+      branch: student.branch,
+      section: student.section,
+      year: student.year,
+      program: student.program,
     });
   } catch (error) {
     console.error('Tap API error:', error);
