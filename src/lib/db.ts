@@ -119,14 +119,17 @@ export async function getPolicy(serviceType: string) {
 
 // Check permission
 export function checkPermission(
-  student: { status: string; wallet_balance: number },
-  policy: { requires_payment: boolean; cost: number }
+  student: { status: string; wallet_balance: number | string },
+  policy: { requires_payment: boolean; cost: number | string }
 ): { allowed: boolean; message: string } {
   if (student.status !== 'active') {
     return { allowed: false, message: 'Student account is not active' };
   }
 
-  if (policy.requires_payment && student.wallet_balance < policy.cost) {
+  const balance = parseFloat(String(student.wallet_balance));
+  const cost = parseFloat(String(policy.cost));
+
+  if (policy.requires_payment && balance < cost) {
     return { allowed: false, message: 'Insufficient Balance' };
   }
 
