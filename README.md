@@ -15,20 +15,6 @@ Next.js 14, Tailwind CSS, Chakra UI, PostgreSQL (Neon.tech)
 
 ---
 
-## 🚀 Quick Deploy to Vercel (One Click!)
-
-1. Push this repo to GitHub
-2. Go to [vercel.com](https://vercel.com) → Import Project
-3. Add environment variable:
-   ```
-   DATABASE_URL = postgresql://neondb_owner:npg_Ar4eP3csfbDG@ep-blue-recipe-ah7v9sg7-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
-   ```
-4. Deploy! ✅
-
-That's it! Everything runs on Vercel - frontend AND backend API routes.
-
----
-
 ## Local Development
 
 ```bash
@@ -36,7 +22,6 @@ That's it! Everything runs on Vercel - frontend AND backend API routes.
 npm install
 
 # Create .env.local with DATABASE_URL
-echo 'DATABASE_URL="postgresql://neondb_owner:npg_Ar4eP3csfbDG@ep-blue-recipe-ah7v9sg7-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"' > .env.local
 
 # Run the development server
 npm run dev
