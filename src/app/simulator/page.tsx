@@ -100,7 +100,7 @@ export default function SimulatorPage() {
 
     try {
       // Call the backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tap`, {
+      const response = await fetch('/api/tap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
