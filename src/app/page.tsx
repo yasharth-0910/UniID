@@ -478,10 +478,10 @@ function HowItWorksSection() {
 // Team Section
 function TeamSection() {
   const team = [
-    { name: 'Yasharth Singh', role: 'Full Stack Developer', avatar: '' },
-    { name: 'Mohammad Ali', role: 'Backend Developer', avatar: '' },
-    { name: 'Vaibhav Katariya', role: 'Frontend Developer', avatar: '' },
-    { name: 'Saniya Khan', role: 'UI/UX Designer', avatar: '' },
+    { name: 'Yasharth Singh', role: '', avatar: '' },
+    { name: 'Mohammad Ali', role: '', avatar: '' },
+    { name: 'Vaibhav Katariya', role: '', avatar: '' },
+    { name: 'Saniya Khan', role: '', avatar: '' },
   ];
 
   return (
