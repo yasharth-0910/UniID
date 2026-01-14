@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Chakra_UI-2.8-teal?style=for-the-badge&logo=chakraui" alt="Chakra UI"/>
 </p>
 
-**UniID** is a unified campus identity platform that enables **attendance, access control, and payments** using a single RFID-based ID card. Built for the Online Hackathon, this project demonstrates how campuses can unify fragmented identity systems into one intelligent, scalable solution.
+**UniID** is a unified campus identity platform that enables **attendance, access control, and payments** using a single RFID-based ID card. Built for the Innovate 3.0, this project demonstrates how campuses can unify fragmented identity systems into one intelligent, scalable solution.
 
 ---
 
@@ -616,44 +616,3 @@ The architecture supports:
 
 ---
 
-## 🏆 Hackathon Highlights
-
-- **Identity-First Architecture**: Clear separation between identity and services
-- **Simulation-Ready**: No hardware needed for demo
-- **Scalable Design**: Easily extensible to new services
-- **Realistic Data Model**: Believable academic structure
-- **Clean UI/UX**: Professional dark theme with animations
-- **Full-Stack TypeScript**: End-to-end type safety
-- **Modern Stack**: Next.js 14 App Router, React 18
-
----
-
-## 👨‍💻 Team
-
-| Name | Role |
-|------|------|
-| Yasharth Singh | Full Stack Developer |
-| Mohammad Ali | Backend Developer |
-| Vaibhav Katariya | Frontend Developer |
-| Saniya Khan | UI/UX Designer |
-
----
-
-## 📄 License
-
-This project is built for educational and hackathon demonstration purposes.
-
----
-
-## 🙏 Acknowledgments
-
-- **Neon** for serverless PostgreSQL
-- **Vercel** for seamless deployment
-- **Chakra UI** for beautiful components
-- **Next.js** team for the amazing framework
-
----
-
-<p align="center">
-  <strong>Built with ❤️ for the Online Hackathon 2026</strong>
-</p>
