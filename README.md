@@ -1,4 +1,4 @@
-# UniID — Smart Campus Identity & Access System
+# UniID — Smart Campus Identity & Access Systems
 
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" alt="Next.js"/>
